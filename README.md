@@ -1,98 +1,149 @@
-# FlowMate
+# FlowMate - WhatsApp Automation com IA
 
-![FlowMate Logo](https://img.shields.io/badge/FlowMate-WhatsApp%20Automation-green)
-![Node.js](https://img.shields.io/badge/Node.js-v18.x-brightgreen)
-![License](https://img.shields.io/badge/License-MIT-blue)
-
-FlowMate é uma plataforma de automação para WhatsApp com integração de IA generativa. Permite criar múltiplas instâncias independentes, suporte a atendimento humano assistido, filtragem de mensagens e controle inteligente de fluxos.
+FlowMate é uma plataforma de automação de atendimento via WhatsApp, suportando múltiplas instâncias independentes, integração com IA generativa e fluxo inteligente de mensagens. O sistema é preparado para deployment em Linux, Docker e AWS, com arquitetura escalável, logs centralizados e persistência isolada por cliente.
 
 ---
 
-## 🔹 Features
+## Tecnologias
 
-- **Fluxo inteligente de mensagens**: roteador, modo IA e modo CASES.  
-- **Deduplicação avançada**: evita respostas duplicadas e loops.  
-- **Watchdog de estabilidade**: reinicializa automaticamente sessões travadas.  
-- **Atendimento humano assistido**: pausa automática do bot ao detectar interação manual.  
-- **Persistência isolada por cliente**: histórico, contexto, sessão e configurações separadas.  
-- **Filtragem automática de mensagens**: anti-spam, anti-grupo, anti-status, mensagens triviais.  
-- **Mensagem de boas-vindas inteligente**: evita múltiplos envios.  
-- **Deploy em Linux preparado**: suporta Chromium externo.  
-- **Estrutura pronta para Docker e AWS**: fácil containerização e deploy em nuvem.  
-- **Arquitetura escalável e modular**: logs centralizados e validação de fluxo.  
-- **Preparado para futura migração**: API oficial do WhatsApp Business.  
+* Node.js
+* WhatsApp-Web.js
+* Puppeteer
+* OpenAI API
+* Linux
+* Docker
+* AWS (em desenvolvimento)
+* Fluxo inteligente de mensagens
 
 ---
 
-## 🔹 Tecnologias
+## Recursos Principais
 
-- Node.js • WhatsApp-Web.js • Puppeteer • OpenAI API  
-- Linux, Docker, AWS  
-- Arquitetura modular com logs e histórico persistente  
+* Fluxo inteligente de mensagens: roteador de mensagens, modo IA e modo CASES.
+* Deduplicação avançada: evita respostas duplicadas e loops.
+* Watchdog de estabilidade: reinicia automaticamente sessões travadas.
+* Atendimento humano assistido: pausa automática do bot ao detectar interação manual.
+* Persistência isolada por cliente: contexto, histórico, configuração e sessão.
+* Filtragem de mensagens: anti-spam, anti-grupo, anti-status e mensagens triviais.
+* Controle de boas-vindas inteligente: evita múltiplos envios.
+* Deploy preparado para Linux: com Chromium externo.
+* Containerização: preparado para Docker e AWS.
+* Arquitetura escalável: logs centralizados, modularização e validação de fluxo.
+* Preparação para API oficial do WhatsApp Business: fácil migração futura.
 
 ---
 
-## 🔹 Instalação
+## Pré-requisitos
+
+* Node.js v18+
+* npm ou yarn
+* Chromium instalado
+* Acesso a terminal Linux, macOS ou Windows (WSL recomendado para Windows)
+
+---
+
+## Instalação
 
 1. Clone o repositório:
 
-```bash
+```
 git clone https://github.com/TinRober/FlowMate.git
 cd FlowMate
-Instale dependências:
+```
 
-bash
-Copiar código
+2. Instale dependências:
+
+```
 npm install
-Configure variáveis de ambiente:
+ou
+yarn install
+```
 
-Crie um arquivo .env na raiz do projeto com as variáveis necessárias, por exemplo:
+3. Configure a variável de ambiente para o Chromium (Linux):
 
-env
-Copiar código
+```
+export CHROME_PATH=/usr/bin/chromium
+```
+
+ou adicione ao `.env`:
+
+```
 CHROME_PATH=/usr/bin/chromium
-OPENAI_API_KEY=your_openai_key
-Inicie o bot:
+```
 
-bash
-Copiar código
-node bot/index.js --id=nomeDoCliente
-🔹 Estrutura do projeto
-bash
-Copiar código
-FlowMate/
-│
-├─ bot/                   # Código do bot
-│  ├─ index.js            # Inicialização do cliente
-│  ├─ WhatsAppClient.js   # Handler do cliente
-│  └─ instances/          # Sessões e histórico dos clientes
-│
-├─ utils/                 # Funções auxiliares
-│  ├─ mensagens/          # Fluxo de mensagens IA e CASES
-│  ├─ core/               # Logger, deduplicação e controles
-│  └─ atendimentoHumano.js
-│
-├─ clientes/              # Configurações por cliente (ignoradas pelo git)
-├─ dist/                  # Arquivos compilados / bundle (ignorados pelo git)
-├─ .env                   # Variáveis de ambiente (ignoradas pelo git)
-└─ package.json
-🔹 Contribuição
-Contribuições são bem-vindas! Para adicionar melhorias:
+---
 
-Fork o repositório
+## Criando e rodando um usuário
 
-Crie uma branch para sua feature (git checkout -b minha-feature)
+1. Criar a pasta do cliente:
 
-Commit suas alterações (git commit -m 'Minha feature')
+```
+mkdir -p bot/clientes/Cliente1
+```
 
-Push para a branch (git push origin minha-feature)
+2. Criar arquivo de configuração em `bot/clientes/Cliente1/Cliente1.json`:
 
-Abra um Pull Request
+```
+{
+  "mode": "ia",
+  "mensagemBoasVindas": "Olá! Bem-vindo(a) ao FlowMate!",
+  "contextoIA": {},
+  "outrasConfiguracoes": {}
+}
+```
 
-🔹 Licença
-MIT License © Roberto Galarani
+3. Inicializar o cliente:
 
-🔹 Contato
-GitHub: https://github.com/TinRober
+```
+node bot/index.js --id=Cliente1
+```
 
-Email: galarani.dev@gmail.com
+* O `--id` deve corresponder ao nome da pasta/arquivo JSON do cliente. O bot cria automaticamente a sessão em `bot/instances/Cliente1/`.
+
+4. QR Code na primeira execução:
+
+* Será exibido no terminal.
+* Também será salvo em `bot/qrcodes/qrcode-Cliente1.png`.
+
+5. Mensagens e monitoramento:
+
+* Mensagens são processadas pelo modo configurado (`ia` ou `case`).
+* Logs são exibidos no console e salvos em `logs/`.
+* Watchdog reinicia automaticamente clientes travados.
+
+---
+
+
+## Comandos úteis
+
+* Rodar um cliente específico:
+
+```
+node bot/index.js --id=Cliente1
+```
+
+* Reiniciar o cliente travado: watchdog faz isso automaticamente.
+* Visualizar logs: em `logs/` ou no console.
+
+---
+
+## Contribuindo
+
+1. Fork o repositório.
+2. Crie sua branch: `git checkout -b minha-feature`.
+3. Faça commits das alterações: `git commit -m "Minha feature"`.
+4. Push para sua branch: `git push origin minha-feature`.
+5. Abra um Pull Request.
+
+---
+
+## Licença
+
+MIT License © 2025 Roberto Alzir Galarani Chaves
+
+---
+
+## Contato
+
+* GitHub: [TinRober](https://github.com/TinRober)
+* E-mail: [galarani.dev@gmail.com](mailto:galarani.dev@gmail.com)
