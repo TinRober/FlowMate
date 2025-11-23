@@ -65,6 +65,7 @@ class WhatsAppClientHandler {
 
             // sem isso o flowRouter não sabe quem é o cliente
             this.client.clienteId = this.clienteId;
+            this.client.mode = this.mode;
             if (this.mode === "ia") this.client.boasVindas = clienteConfig.mensagemBoasVindas;
             this.client.firstMessageSent = {};
             this.client.startTimestamp = Math.floor(Date.now() / 1000);
@@ -151,5 +152,4 @@ class WhatsAppClientHandler {
 }
 
 module.exports = { WhatsAppClientHandler };
-
 

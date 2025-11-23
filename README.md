@@ -137,6 +137,10 @@ node bot/index.js --id=Cliente1
 
 ---
 
+## ATENÇÃO
+
+Durante o desenvolvimento do projeto percebi um erro gigante, não consigo bloquear o envio das mensagens se elas não forem enviadas da mesma instância do whatsapp, impossibilitando de usar esse modelo em servidor sem a API oficial do whatsapp. Usando fora da API oficial o bot fica enviando as mensagens independente de você começar a conversar com o contato, ele não pausa. No projeto existe a opção de pausa mas ela só funciona se as mensagens forem enviadas da mesma instância. Irei criar uma versão que rode nativamente e de forma isolada para cada usuário(cliente) na própria máquina dele.
+
 ## Licença
 
 MIT License © 2025 Roberto Alzir Galarani Chaves

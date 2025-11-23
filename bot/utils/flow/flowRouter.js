@@ -5,11 +5,18 @@ const { logger } = require("../core/logger");
 // IA
 const { processarIA } = require("../ia/iaHandler");
 
+// 🔥 CACHE PARA NÃO RECARREGAR O FLUXO A CADA MENSAGEM
+const fluxoCache = new Map();
+
 /**
- * Carrega o fluxo CASES do cliente
- * Retorna a função processarMensagem do arquivo fluxoCases.js
+ * Carrega o fluxo CASES do cliente APENAS UMA VEZ
+ * e guarda em cache.
  */
-function carregarFluxoCasesCliente(clienteId) {
+function obterFluxoCases(clienteId) {
+    if (fluxoCache.has(clienteId)) {
+        return fluxoCache.get(clienteId);
+    }
+
     const filePath = path.join(process.cwd(), "bot", "clientes", clienteId, "fluxoCases.js");
 
     if (!fs.existsSync(filePath)) {
@@ -17,39 +24,69 @@ function carregarFluxoCasesCliente(clienteId) {
         return null;
     }
 
-    logger.info(`[FlowRouter] 📁 Carregando fluxo CASES do cliente: ${clienteId}`);
+    logger.info(`[FlowRouter] 📁 Carregando fluxo CASES do cliente (primeira vez): ${clienteId}`);
 
-    // Limpa cache para recarregar alterações
+    // Remove do cache Node.js só na primeira carga
     delete require.cache[require.resolve(filePath)];
-    const { processarMensagem } = require(filePath);
 
-    return processarMensagem;
+    const fluxo = require(filePath);
+
+    if (!fluxo?.processarMensagem) {
+        logger.error(`[FlowRouter] ❌ fluxoCases.js inválido para cliente ${clienteId}`);
+        return null;
+    }
+
+    // Armazena no cache
+    fluxoCache.set(clienteId, fluxo.processarMensagem);
+
+    return fluxo.processarMensagem;
 }
 
-//flowRouter – Decide entre IA ou CASES
+/**
+ * flowRouter – Decide entre IA ou CASES (versão corrigida)
+ */
 async function flowRouter(
     msg,
     client,
     mode,
     contextoIA,
     atendimentoTemp,
-    marcarAtendimento,
-    boasVindas
+    marcarAtendimento
 ) {
     const clienteId = client?.clienteId;
     logger.info(`[FlowRouter] Cliente "${clienteId}" usando modo: ${mode}`);
 
+    // ===========================
+    // MODO CASE → usa fluxoCases.js
+    // ===========================
     if (mode === "case") {
-        const processarCases = carregarFluxoCasesCliente(clienteId);
+        const processarCases = obterFluxoCases(clienteId);
+
         if (!processarCases) {
             return client.sendMessage(msg.from, "Erro interno: fluxo CASE não encontrado.");
         }
 
-        return processarCases(msg, client, contextoIA, atendimentoTemp, marcarAtendimento);
+        // Agora o fluxo mantém estado real, não reinicia sempre
+        return processarCases(msg, client, atendimentoTemp);
     }
 
-    // Default: IA
-    return processarIA(clienteId, msg.body, contextoIA, client, msg.from, marcarAtendimento, boasVindas);
+    // ===========================
+    // MODO IA
+    // ===========================
+    try {
+        return await processarIA(
+            clienteId,
+            msg.body,
+            contextoIA,
+            client,
+            msg.from,
+            marcarAtendimento,
+            false // sem boas-vindas automático
+        );
+    } catch (err) {
+        logger.error(`[FlowRouter] Erro ao chamar IA: ${err.message}`);
+        try { await client.sendMessage(msg.from, "Desculpe, ocorreu um erro interno."); } catch {}
+    }
 }
 
 module.exports = { flowRouter };
